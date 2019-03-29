@@ -5,6 +5,10 @@
 #include "game.h"
 #include "menu.h"
 
+void initSettings(){
+	clearFields();
+}
+
 void initSinglePlayer(){
 	long int numRows = 0;
 	long int numCols = 0;
@@ -66,6 +70,10 @@ void initSinglePlayer(){
 	}
 	freeBoard(board, numRows+3);
 	freeGraph(graph, numRows);
+	printf("Press enter to continue.");
+	char buffer;
+	scanf("%c", &buffer);
+	dispMenu();
 }
 
 void dispMenu(){
@@ -80,25 +88,30 @@ void dispMenu(){
 
 	char option;
 	scanf("%c", &option);
-
-	switch(option){
-		case '1':
-			initSinglePlayer();
-			break;
-		case '2':
-			printf("You chose option 2.\n");
-			break;
-		case '3':
-			printf("You chose option 3.\n");
-			break;
-		case '4':
-			printf("You chose option 4.\n");
-			break;
-		case '5':
-			printf("You chose option 5.\n");
-			break;
-		default:
-			printf("Invalid Option.\n");
-			break;		
+	bool pressed_quit = false;
+	while(1){
+		switch(option){
+			case '1':
+				initSinglePlayer();
+				break;
+			case '2':
+				printf("You chose option 2.\n");
+				break;
+			case '3':
+				printf("You chose option 3.\n");
+				break;
+			case '4':
+				printf("You chose option 4.\n");
+				break;
+			case '5':
+				printf("Hope to see you soon!\n");
+				pressed_quit = true;
+				break;
+			default:
+				printf("Invalid Option.\n");
+				break;
+		}
+		if(pressed_quit) break;
+		scanf("%c", &option);
 	}
 }
