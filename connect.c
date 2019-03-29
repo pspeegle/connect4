@@ -5,6 +5,8 @@
 #include "menu.h"
 
 int main(void){
-	dispMenu();
+	while(dispMenu() == 0){
+		;
+	}
 	return 0;
 }

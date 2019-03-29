@@ -82,43 +82,37 @@ void freeGraph(int **graph, int rows){
 	free(graph);
 }
 
-void insert(char **board, int cols, int rows, char c){
-	long int curCol = 0;
-	while(1){
-		printf("Choose which column to insert in: ");
-		char input[100];
-		char *pEnd;
-		fgets(input, 100, stdin);
-		curCol = strtol(input, &pEnd, 10);
-		curCol--;
-		if(curCol >= 0 && curCol < cols){
-			int i = rows-1;
-			while(i >= 0 && (board[i][curCol] == 'X'|| board[i][curCol] == 'O')){
-				i--;
-			}
-			if(i == -1){
-				printf("This column is full!\n");
-				continue;
-			}
-			else{
-				int j = 0;
-				printf("\e[?25l");
-				while(j <= i){
-					if(j > 0) board[j-1][curCol] = ' ';
-					board[j][curCol] = c;
-					clearFields();
-					printBoard(board, cols, rows);
-					clearFields();
-					j++;
-				}
-				printf("\e[?25h");
-				break;
-			}
+int insert(char **board, int cols, int rows, int curCol, char c){
+	if(curCol >= 0 && curCol < cols){
+		int i = rows-1;
+		while(i >= 0 && (board[i][curCol] == 'X'|| board[i][curCol] == 'O')){
+			i--;
+		}
+		if(i == -1){
+			printf("This column is full!\n");
+			return 0;
 		}
 		else{
-			printf("Invalid input!\n");
+			int j = 0;
+			printf("\e[?25l");
+			while(j <= i){
+				if(j > 0) board[j-1][curCol] = ' ';
+				board[j][curCol] = c;
+				clearFields();
+				printBoard(board, cols, rows);
+				clearFields();
+				j++;
+			}
+			printf("\e[?25h");
+			return 1;
 		}
 	}
+	
+	else{
+		printf("Invalid input!\n");
+		return 0;
+	}
+	return 0;
 }
 
 bool checkBoard(char **board, int cols, int rows){
