@@ -8,7 +8,7 @@ void printBoard(char **, int, int);
 void clearFields();
 void freeBoard(char **, int);
 void freeGraph(int **, int);
-int insert(char **, int, int, int, char);
+int insert(char **, int, int, int, char, bool);
 bool checkBoard(char **, int, int);
 bool checkBoardX(char **, int, int);	
 bool checkBoardO(char **, int, int);

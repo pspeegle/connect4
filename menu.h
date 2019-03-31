@@ -2,6 +2,6 @@
 #define MENU_H_INCLUDED
 
 void initSinglePlayer();
-int dispMenu();
+int dispMenu(bool);
 
 #endif

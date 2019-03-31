@@ -5,28 +5,30 @@
 #include "game.h"
 #include "menu.h"
 
-void initSettings(){
+bool initSettings(bool animation_on){
+	char input;
 	clearFields();
 	printf("************SETTINGS************\n\n");
 	printf("       Select an Option Below:\n");
 	printf("1 - Enable/Disable Animations\n");
-	printf("2 - ");
+	printf("2 - Quit\n");
+	scanf(" %c", &input);
+	if(input == '1') animation_on = !animation_on;
+	return animation_on;
 }
 
-void initMultiPlayer(double score1, double score2, int rows, int cols, char *play1, char *play2, bool already_played){
+void initMultiPlayer(double score1, double score2, int rows, int cols, char *play1, char *play2, bool already_played, bool animation_on){
 	long int numRows = rows;
 	long int numCols = cols;
-	char *p1;
-	p1 = play1;
-	char *p2;
-	p2 = play2;
-	char *p1_n = (char*)malloc(50*sizeof(char));
-	char *p2_n = (char*)malloc(50*sizeof(char));
+	bool setting = animation_on;
+	char p1[50];
+	char p2[50];
 	char *pEnd;
 	bool o_turn = false;
 	clearFields();
 	if(!already_played){
 		printf("How many rows would you like in the game? NOTE: Any character input will be ignored. Any size above 50 might cause odd formatting.\n");
+		printf("\e[?25h");
 		while(1){
 			char input[100];
 			fgets(input, 100, stdin);
@@ -50,12 +52,11 @@ void initMultiPlayer(double score1, double score2, int rows, int cols, char *pla
 			break;
 		}
 		printf("Enter name of Player 1 (max 50 chars): ");
-		fgets(p1, 50, stdin);
-		p1_n = strtok(p1, "\n");
+		scanf("%s", p1);
 		printf("Enter name of Player 2 (max 50 chars): ");
-		fgets(p2, 50, stdin);
-		p2_n = strtok(p2, "\n");
+		scanf("%s", p2);
 	}
+	printf("\e[?25l");
 	char **board = allocBoard(numCols,numRows);
 	int **graph = allocGraph(numCols, numRows);
 	clearFields();	
@@ -64,14 +65,15 @@ void initMultiPlayer(double score1, double score2, int rows, int cols, char *pla
 	long int curCol = 0;
 	char input[1000];
 	bool bad_input = false;
+	getchar();
 	while(1){
-		if(!bad_input) printf("SCORES: %s : %.1f ; %s : %.1f\n\n\n", p1, score1, p2, score2);
+		if(!bad_input) printf("NOTE: Disable animations in SETTINGS. SCORES: %s : %.1f ; %s : %.1f\n\n\n", p1, score1, p2, score2);
 		if(o_turn == false){
 			printf("%s, choose a column to place your piece (X) : ", p1);
 			fgets(input, 1000, stdin);
 			curCol = strtol(input, &pEnd, 10);
 			curCol--;
-			if(insert(board,numCols,numRows, curCol, 'X') == 0){ 
+			if(insert(board,numCols,numRows, curCol, 'X', setting) == 0){ 
 				bad_input = true;
 				continue;
 			}
@@ -97,7 +99,7 @@ void initMultiPlayer(double score1, double score2, int rows, int cols, char *pla
 		fgets(input, 1000, stdin);
 		curCol = strtol(input, &pEnd, 10);
 		curCol--;
-		if(insert(board,numCols,numRows, curCol, 'O') == 0){
+		if(insert(board,numCols,numRows, curCol, 'O', setting) == 0){
 			o_turn = true;
 			bad_input = true;
 			continue;
@@ -127,11 +129,12 @@ void initMultiPlayer(double score1, double score2, int rows, int cols, char *pla
 	scanf("%c", &buffer);
 	o_turn = false;
 	if(buffer == '1'){
-		initMultiPlayer(score1, score2, numRows, numCols, p1, p2, true);
+		initMultiPlayer(score1, score2, numRows, numCols, p1, p2, true, setting);
 	}
 }
 
-int dispMenu(){
+int dispMenu(bool s){
+	bool animation_on = s;
 	clearFields();
 	printf("************WELCOME TO CONNECT FOUR IN A ROW************\n\n");
 	printf("                 Select an Option Below:                \n");
@@ -140,33 +143,35 @@ int dispMenu(){
 	printf("3 - Settings                                            \n");
 	printf("4 - How to Play                                         \n");
 	printf("5 - Quit                                                \n");
+	if(animation_on)printf("\nANIMATIONS ARE ON. Select an option above: ");
+	else{
+		printf("\nANIMATIONS ARE OFF. Select an option above: ");
+	}
+	printf("\e[?25h");
 	char *p1 = (char*)malloc(50*sizeof(char*));
 	char *p2 = (char*)malloc(50*sizeof(char*));
 	char option;
 	scanf("%c", &option);
 	bool pressed_quit = false;
-	while(1){
-		switch(option){
-			case '1':
-				break;
-			case '2':
-				initMultiPlayer(0, 0, 0, 0, p1, p2, false);
-				break;
-			case '3':
-				printf("You chose option 3.\n");
-				break;
-			case '4':
-				printf("You chose option 4.\n");
-				break;
-			case '5':
-				printf("Hope to see you soon!\n");
-				pressed_quit = true;
-				break;
-			default:
-				break;
-		}
-		if(pressed_quit) return 1;
-		return 0;
+	switch(option){
+		case '1':
+			break;
+		case '2':
+			initMultiPlayer(0, 0, 0, 0, p1, p2, false, animation_on);
+			printf("\e[?25l");
+			break;
+		case '3':
+			animation_on = initSettings(animation_on);
+			if(animation_on) return 1;
+			if(!animation_on) return 2;
+		case '4':
+			printf("You chose option 4.\n");
+			break;
+		case '5':
+			printf("Hope to see you soon!\n");
+			return -1;
+		default:
+			break;
 	}
 	return 0;
 }

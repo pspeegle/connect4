@@ -82,7 +82,7 @@ void freeGraph(int **graph, int rows){
 	free(graph);
 }
 
-int insert(char **board, int cols, int rows, int curCol, char c){
+int insert(char **board, int cols, int rows, int curCol, char c, bool animations_on){
 	if(curCol >= 0 && curCol < cols){
 		int i = rows-1;
 		while(i >= 0 && (board[i][curCol] == 'X'|| board[i][curCol] == 'O')){
@@ -94,16 +94,19 @@ int insert(char **board, int cols, int rows, int curCol, char c){
 		}
 		else{
 			int j = 0;
-			printf("\e[?25l");
-			while(j <= i){
-				if(j > 0) board[j-1][curCol] = ' ';
-				board[j][curCol] = c;
-				clearFields();
-				printBoard(board, cols, rows);
-				clearFields();
-				j++;
+			if(animations_on){
+				while(j <= i){
+					if(j > 0) board[j-1][curCol] = ' ';
+					board[j][curCol] = c;
+					clearFields();
+					printBoard(board, cols, rows);
+					clearFields();
+					j++;
+				}
 			}
-			printf("\e[?25h");
+			else{
+				board[i][curCol] = c;
+			}
 			return 1;
 		}
 	}
@@ -179,12 +182,17 @@ int **findOpenMoves(char **board, int **graph, int cols, int rows){
 			graph[i][j] = 1;
 		}
 	}
+	/*
+			DEBUG:
+	   
 	for(int i = 0; i < rows; i++){
 		for(int j = 0; j < cols; j++){
 			printf("%d ", graph[i][j]);
 		}
 		printf("\n");
 	}
+
+	*/
 	return graph;
 }
 void findBestMove(char **board, int **g, int cols, int rows){
