@@ -50,7 +50,7 @@ void initSinglePlayer(bool animation_on){
 	}
 	char **board = allocBoard(numCols,numRows);
 	int **graph = allocGraph(numCols, numRows);
-	clearFields();	
+	//clearFields();	
 	graph = findOpenMoves(board, graph, numCols, numRows);
 	printBoard(board, numCols, numRows);
 	long int curCol = 0;
@@ -58,6 +58,7 @@ void initSinglePlayer(bool animation_on){
 	bool bad_input = false;
 	bool found_move = false;
 	bool found_rand = false;
+	move bestMove = {-1, -1};
 	getchar();
 	while(1){
 		//if(!bad_input) printf("NOTE: Disable animations in SETTINGS. SCORES: %s : %.1f ; %s : %.1f\n\n\n", p1, score1, p2, score2);
@@ -72,14 +73,15 @@ void initSinglePlayer(bool animation_on){
 				bad_input = true;
 				continue;
 			}
-			clearFields();
+			//clearFields();
 			printBoard(board, numCols, numRows);
+			graph = findOpenMoves(board, graph, numCols, numRows);
 			if(checkBoard(board,numCols,numRows)){
 				printf("Player one wins!\n");
 				//score1++;
 				break;
 			}
-			if(checkTies(graph, numCols, numRows)){
+			if(checkTies(board, numCols, numRows)){
 				printf("It's a tie!\n");
 				//score1 += 0.5;
 				//score2 += 0.5;
@@ -97,41 +99,22 @@ void initSinglePlayer(bool animation_on){
 				}
 				printf("\n");
 			}
-			graph = findBestMove(board, graph, numCols, numRows);
-			for(int i = 0; i < numRows; i++){
-				for(int j = 0; j < numCols; j++){
-					printf("%d", graph[i][j]);
-				}
-				printf("\n");
+			bestMove = findBestMove(board, numCols, numRows);
+			if(bestMove.column == -1){
+				printf("ERROR this should not happen");
 			}
-			for(int i = 0; i < numRows; i++){
-				for(int j = 0; j < numCols; j++){
-					if(graph[i][j] == 2){
-						printf("found_move is true at coordinate (%d, %d)", i, j);
-						found_move = true;
-						insert(board, numCols, numRows, j, 'O', setting);
-					}
-				}
+			else{
+				insert(board, numCols, numRows, bestMove.column, 'O', setting);
 			}
-			if(!found_move){
-				for(int i = 0; i < numRows; i++){
-					for(int j = 0; j < numCols; j++){
-						if(graph[i][j] == 1){
-							insert(board, numCols, numRows, j, 'O', setting);
-							found_rand = true;
-							break;
-						}
-					}
-					if(found_rand) break;
-				}
-			}
+			printf("Got here.");
 			printBoard(board, numCols, numRows);
+			graph = findOpenMoves(board, graph, numCols, numRows);
 			if(checkBoard(board,numCols,numRows)){
 				printf("Player two wins!\n");
 				//score2++;
 				break;
 			}
-			if(checkTies(graph, numCols, numRows)){
+			if(checkTies(board, numCols, numRows)){
 				printf("It's a tie!\n");
 				//score1 += 0.5;
 				//score2 += 0.5;
@@ -211,7 +194,7 @@ void initMultiPlayer(double score1, double score2, int rows, int cols, char *pla
 				score1++;
 				break;
 			}
-			if(checkTies(graph, numCols, numRows)){
+			if(checkTies(board, numCols, numRows)){
 				printf("It's a tie!\n");
 				score1 += 0.5;
 				score2 += 0.5;
@@ -240,7 +223,7 @@ void initMultiPlayer(double score1, double score2, int rows, int cols, char *pla
 			score2++;
 			break;
 		}
-		if(checkTies(graph, numCols, numRows)){
+		if(checkTies(board, numCols, numRows)){
 			printf("It's a tie!\n");
 			score1 += 0.5;
 			score2 += 0.5;

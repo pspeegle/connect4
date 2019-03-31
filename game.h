@@ -2,6 +2,7 @@
 #ifndef GAME_H_INCLUDED
 #define GAME_H_INCLUDED
 
+#include "move.h"
 char **allocBoard(int, int);
 int **allocGraph(int, int);
 void printBoard(char **, int, int);
@@ -12,8 +13,9 @@ int insert(char **, int, int, int, char, bool);
 bool checkBoard(char **, int, int);
 bool checkBoardX(char **, int, int);	
 bool checkBoardO(char **, int, int);
-bool checkTies(int**, int, int);
-int **findOpenMoves(char **, int **, int, int);
-int **findBestMove(char **, int **, int, int);
+bool checkTies(char**, int, int);
+int **findOpenMoves(char **, int**, int, int);
+int miniMax(char **, int, int, int, bool);
+move findBestMove(char **, int, int);
 
 #endif

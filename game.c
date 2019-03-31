@@ -3,6 +3,8 @@
 #include <string.h>
 #include <stdbool.h>
 #include "game.h"
+#define max(x, y) (((x) > (y)) ? (x) : (y))
+#define min(x, y) (((x) < (y)) ? (x) : (y))
 
 char **allocBoard(int cols, int rows){
 	char **board = (char **)malloc((rows+3)*sizeof(char *));
@@ -13,6 +15,9 @@ char **allocBoard(int cols, int rows){
 		for(int j = 0; j < cols+3; j++){
 			board[i][j] = ' ';
 		}
+	}
+	for(int j = 0; j < cols+3; j++){
+		board[rows][j] = '+';
 	}
 	return board;
 }
@@ -121,7 +126,7 @@ int insert(char **board, int cols, int rows, int curCol, char c, bool animations
 bool checkBoard(char **board, int cols, int rows){
 	for(int i = 0; i < rows; i++){
 		for(int j = 0; j < cols; j++){
-			if(board[i][j] == 'X' && board[i][j] == 'O') continue;
+			if(board[i][j] != 'X' && board[i][j] != 'O') continue;
 			if(board[i][j] == 'X' && board[i][j+1] == 'X' && board[i][j+2] == 'X' && board[i][j+3] == 'X') return true;
 			if(board[i][j] == 'O' && board[i][j+1] == 'O' && board[i][j+2] == 'O' && board[i][j+3] == 'O') return true;
 			if(board[i][j] == 'X' && board[i+1][j] == 'X' && board[i+2][j] == 'X' && board[i+3][j] == 'X') return true;
@@ -138,7 +143,7 @@ bool checkBoard(char **board, int cols, int rows){
 bool checkBoardX(char **board, int cols, int rows){
 	for(int i = 0; i < rows; i++){
 		for(int j = 0; j < cols; j++){
-			if(board[i][j] == 'X' && board[i][j] == 'O') continue;
+			if(board[i][j] != 'X' && board[i][j] != 'O') continue;
 			if(board[i][j] == 'X' && board[i][j+1] == 'X' && board[i][j+2] == 'X' && board[i][j+3] == 'X') return true;
 			if(board[i][j] == 'X' && board[i+1][j] == 'X' && board[i+2][j] == 'X' && board[i+3][j] == 'X') return true;
 			if(board[i][j] == 'X' && board[i+1][j+1] == 'X' && board[i+2][j+2] == 'X' && board[i+3][j+3] == 'X') return true;
@@ -151,7 +156,7 @@ bool checkBoardX(char **board, int cols, int rows){
 bool checkBoardO(char **board, int cols, int rows){
 	for(int i = 0; i < rows; i++){
 		for(int j = 0; j < cols; j++){
-			if(board[i][j] == 'X' && board[i][j] == 'O') continue;
+			if(board[i][j] != 'X' && board[i][j] != 'O') continue;
 			if(board[i][j] == 'O' && board[i][j+1] == 'O' && board[i][j+2] == 'O' && board[i][j+3] == 'O') return true;
 			if(board[i][j] == 'O' && board[i+1][j] == 'O' && board[i+2][j] == 'O' && board[i+3][j] == 'O') return true;
 			if(board[i][j] == 'O' && board[i+1][j+1] == 'O' && board[i+2][j+2] == 'O' && board[i+3][j+3] == 'O') return true;
@@ -161,10 +166,10 @@ bool checkBoardO(char **board, int cols, int rows){
 	return false;
 }
 
-bool checkTies(int **graph, int cols, int rows){
+bool checkTies(char **board, int cols, int rows){
 	for(int i = 0; i < rows; i++){
 		for(int j = 0; j < cols; j++){
-			if(graph[i][j] == 1) return false;
+			if(board[i][j] == ' ') return false;
 		}
 	}
 	return true;
@@ -195,41 +200,74 @@ int **findOpenMoves(char **board, int **graph, int cols, int rows){
 	*/
 	return graph;
 }
-int **findBestMove(char **board, int **g, int cols, int rows){
-	int **graph_copy = g;
-	char **board_copy = allocBoard(cols, rows);
-	for(int i = 0; i < rows; i++){
-		for(int j = 0; j < cols; j++){
-			board_copy[i][j] = board[i][j];
-		}
-	}
 
+int scorePosition(char **board, int cols, int rows){
+	if(checkBoardO(board, cols, rows)) return 1000;
+	if(checkBoardX(board, cols, rows)) return -1000;
+	return 0;
+}
+
+int miniMax(char **board, int depth, int cols, int rows, bool isMove){
+	int score = scorePosition(board, cols, rows);
+	//printf("%d ", score);
+	if(score == 1000){
+		return score - depth;
+	}
+	if(score == -1000){
+		return score + depth;
+	}
+	if(checkTies(board, cols, rows)){
+		return 0;
+	}
+	if(isMove){
+		int best = -1000000;
+		for(int i = 0; i < rows; i++){
+			for(int j = 0; j < cols; j++){
+				if(board[i][j] == ' ' && (board[i+1][j] == 'X' || board[i+1][j] == 'O' || board[i+1][j] == '+')){
+					board[i][j] = 'O';
+					best = max(best, miniMax(board, depth+1, cols, rows, !isMove));
+					board[i][j] = ' ';	
+				}
+			}
+		}
+		return best;
+	}
+	else{
+		int best = 1000000;
+		for(int i = 0; i < rows; i++){
+			for(int j = 0; j < cols; j++){
+				if(board[i][j] == ' ' && (board[i+1][j] == 'X' || board[i+1][j] == 'O' || board[i+1][j] == '+')){
+					board[i][j] = 'X';
+					best = min(best, miniMax(board, depth+1, cols, rows, !isMove));
+					board[i][j] = ' ';
+				}
+			}
+		}
+		return best;
+	}
+}
+	
+
+move findBestMove(char **board, int cols, int rows){
+	int bestVal = -1000000;
+	move bestMove;
+	bestMove.row = -1;
+	bestMove.column = -1;
 	for(int i = 0; i < rows; i++){
 		for(int j = 0; j < cols; j++){
-			if(g[i][j] == 1){
-				board_copy[i][j] = 'O';
-				if(checkBoardO(board_copy, cols, rows)){
-					graph_copy[i][j] = 2;
-					free(board_copy);
-					return graph_copy;
+			if(board[i][j] == ' ' && (board[i+1][j] == 'X' || board[i+1][j] == 'O' || board[i+1][j] == '+')){
+				printf("through loop");
+				board[i][j] = 'O';
+				int moveVal = miniMax(board_copy, 0, cols, rows, false);
+				board[i][j] = ' ';
+				if(moveVal > bestVal){
+					bestMove.row = i;
+					bestMove.column = j;
+					bestVal = moveVal;
 				}
-				board_copy[i][j] = ' ';
 			}
 		}
 	}
-	for(int i = 0; i < rows; i++){
-		for(int j = 0; j < cols; j++){
-			if(g[i][j] == 1){
-				board_copy[i][j] = 'X';
-				if(checkBoardX(board_copy, cols, rows)){
-					graph_copy[i][j] = 2;
-					free(board_copy);
-					return graph_copy;
-				}
-				board_copy[i][j] = ' ';
-			}
-		}
-	}
-	free(board_copy);
-	return g;
+	printf("The best move is at (%d, %d).", bestMove.row, bestMove.column);
+	return bestMove;
 }
