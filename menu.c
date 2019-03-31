@@ -30,7 +30,7 @@ void initSinglePlayer(bool animation_on){
 		char input[100];
 		fgets(input, 100, stdin);
 		numRows = strtol(input, &pEnd, 10);
-		if(numRows < 4){
+		if(numRows < 3){
 			printf("Please choose a number that is 4 or greater.\n");
 			continue;
 		}
@@ -42,7 +42,7 @@ void initSinglePlayer(bool animation_on){
 		char *pEnd;
 		fgets(input, 100, stdin);
 		numCols = strtol(input, &pEnd, 10);
-		if(numCols < 4){
+		if(numCols < 3){
 			printf("Please choose a number that is 4 or greater.\n");
 			continue;
 		}

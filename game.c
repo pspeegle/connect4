@@ -223,7 +223,7 @@ int miniMax(char **board, int depth, int cols, int rows, bool isMove){
 		int best = -1000000;
 		for(int i = 0; i < rows; i++){
 			for(int j = 0; j < cols; j++){
-				if(board[i][j] == ' ' && (board[i+1][j] == 'X' || board[i+1][j] == 'O' || board[i+1][j] == '+')){
+				if(board[i][j] == ' ' && (board[i+1][j] == 'X' || board[i+1][j] == 'O' || board[i+1][j] == '+') && depth < 4){
 					board[i][j] = 'O';
 					best = max(best, miniMax(board, depth+1, cols, rows, !isMove));
 					board[i][j] = ' ';	
@@ -236,7 +236,7 @@ int miniMax(char **board, int depth, int cols, int rows, bool isMove){
 		int best = 1000000;
 		for(int i = 0; i < rows; i++){
 			for(int j = 0; j < cols; j++){
-				if(board[i][j] == ' ' && (board[i+1][j] == 'X' || board[i+1][j] == 'O' || board[i+1][j] == '+')){
+				if(board[i][j] == ' ' && (board[i+1][j] == 'X' || board[i+1][j] == 'O' || board[i+1][j] == '+') && depth < 4){
 					board[i][j] = 'X';
 					best = min(best, miniMax(board, depth+1, cols, rows, !isMove));
 					board[i][j] = ' ';
@@ -258,7 +258,7 @@ move findBestMove(char **board, int cols, int rows){
 			if(board[i][j] == ' ' && (board[i+1][j] == 'X' || board[i+1][j] == 'O' || board[i+1][j] == '+')){
 				printf("through loop");
 				board[i][j] = 'O';
-				int moveVal = miniMax(board_copy, 0, cols, rows, false);
+				int moveVal = miniMax(board, 0, cols, rows, false);
 				board[i][j] = ' ';
 				if(moveVal > bestVal){
 					bestMove.row = i;
