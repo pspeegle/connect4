@@ -195,7 +195,41 @@ int **findOpenMoves(char **board, int **graph, int cols, int rows){
 	*/
 	return graph;
 }
-void findBestMove(char **board, int **g, int cols, int rows){
-	g = findOpenMoves(board, g, cols, rows);
-		
+int **findBestMove(char **board, int **g, int cols, int rows){
+	int **graph_copy = g;
+	char **board_copy = allocBoard(cols, rows);
+	for(int i = 0; i < rows; i++){
+		for(int j = 0; j < cols; j++){
+			board_copy[i][j] = board[i][j];
+		}
+	}
+	
+	for(int i = 0; i < rows; i++){
+		for(int j = 0; j < cols; j++){
+			if(g[i][j] == 1){
+				board_copy[i][j] = 'O';
+				if(checkBoardO(board_copy, cols, rows)){
+					graph_copy[i][j] = 2;
+					free(board_copy);
+					return graph_copy;
+				}
+				board_copy[i][j] = ' ';
+			}
+		}
+	}
+	for(int i = 0; i < rows; i++){
+		for(int j = 0; j < cols; j++){
+			if(g[i][j] == 1){
+				board_copy[i][j] = 'X';
+				if(checkBoardX(board_copy, cols, rows)){
+					graph_copy[i][j] = 2;
+					free(board_copy);
+					return graph_copy;
+				}
+				board_copy[i][j] = ' ';
+			}
+		}
+	}
+	free(board_copy);
+	return g;
 }

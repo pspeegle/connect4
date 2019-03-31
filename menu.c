@@ -17,12 +17,138 @@ bool initSettings(bool animation_on){
 	return animation_on;
 }
 
+void initSinglePlayer(bool animation_on){
+	long int numRows = 0;
+	long int numCols = 0;
+	bool setting = animation_on;
+	bool o_turn = false;
+	char *pEnd;
+	clearFields();
+	printf("How many rows would you like in the game? NOTE: Any character input will be ignored. Any size above 50 might cause odd formatting.\n");
+	printf("\e[?25h");
+	while(1){
+		char input[100];
+		fgets(input, 100, stdin);
+		numRows = strtol(input, &pEnd, 10);
+		if(numRows < 4){
+			printf("Please choose a number that is 4 or greater.\n");
+			continue;
+		}
+		break;
+	}
+	printf("How many columns would you like in the game?\n");
+	while(1){
+		char input[100];
+		char *pEnd;
+		fgets(input, 100, stdin);
+		numCols = strtol(input, &pEnd, 10);
+		if(numCols < 4){
+			printf("Please choose a number that is 4 or greater.\n");
+			continue;
+		}
+		break;
+	}
+	char **board = allocBoard(numCols,numRows);
+	int **graph = allocGraph(numCols, numRows);
+	clearFields();	
+	graph = findOpenMoves(board, graph, numCols, numRows);
+	printBoard(board, numCols, numRows);
+	long int curCol = 0;
+	char input[1000];
+	bool bad_input = false;
+	bool found_move = false;
+	bool found_rand = false;
+	getchar();
+	while(1){
+		//if(!bad_input) printf("NOTE: Disable animations in SETTINGS. SCORES: %s : %.1f ; %s : %.1f\n\n\n", p1, score1, p2, score2);
+		found_move = false;
+		found_rand = false;
+		if(!o_turn){
+			printf("Choose a column to place your piece (X) : ");
+			fgets(input, 1000, stdin);
+			curCol = strtol(input, &pEnd, 10);
+			curCol--;
+			if(insert(board,numCols,numRows, curCol, 'X', setting) == 0){ 
+				bad_input = true;
+				continue;
+			}
+			clearFields();
+			printBoard(board, numCols, numRows);
+			if(checkBoard(board,numCols,numRows)){
+				printf("Player one wins!\n");
+				//score1++;
+				break;
+			}
+			if(checkTies(graph, numCols, numRows)){
+				printf("It's a tie!\n");
+				//score1 += 0.5;
+				//score2 += 0.5;
+				break;
+			}
+			o_turn = true;
+			bad_input = false;
+			continue;
+		}
+		if(o_turn){
+			graph = findOpenMoves(board, graph, numCols, numRows);
+			for(int i = 0; i < numRows; i++){
+				for(int j = 0; j < numCols; j++){
+					printf("%d", graph[i][j]);
+				}
+				printf("\n");
+			}
+			graph = findBestMove(board, graph, numCols, numRows);
+			for(int i = 0; i < numRows; i++){
+				for(int j = 0; j < numCols; j++){
+					printf("%d", graph[i][j]);
+				}
+				printf("\n");
+			}
+			for(int i = 0; i < numRows; i++){
+				for(int j = 0; j < numCols; j++){
+					if(graph[i][j] == 2){
+						printf("found_move is true at coordinate (%d, %d)", i, j);
+						found_move = true;
+						insert(board, numCols, numRows, j, 'O', setting);
+					}
+				}
+			}
+			if(!found_move){
+				for(int i = 0; i < numRows; i++){
+					for(int j = 0; j < numCols; j++){
+						if(graph[i][j] == 1){
+							insert(board, numCols, numRows, j, 'O', setting);
+							found_rand = true;
+							break;
+						}
+					}
+					if(found_rand) break;
+				}
+			}
+			printBoard(board, numCols, numRows);
+			if(checkBoard(board,numCols,numRows)){
+				printf("Player two wins!\n");
+				//score2++;
+				break;
+			}
+			if(checkTies(graph, numCols, numRows)){
+				printf("It's a tie!\n");
+				//score1 += 0.5;
+				//score2 += 0.5;
+				break;
+			}
+			o_turn = false;
+		}
+	}	
+}
 void initMultiPlayer(double score1, double score2, int rows, int cols, char *play1, char *play2, bool already_played, bool animation_on){
 	long int numRows = rows;
 	long int numCols = cols;
 	bool setting = animation_on;
-	char p1[50];
-	char p2[50];
+	char *p1;
+	p1 = play1;
+	char *p2;
+	p2 = play2;
 	char *pEnd;
 	bool o_turn = false;
 	clearFields();
@@ -155,13 +281,15 @@ int dispMenu(bool s){
 	bool pressed_quit = false;
 	switch(option){
 		case '1':
-			break;
+			initSinglePlayer(animation_on);
 		case '2':
 			initMultiPlayer(0, 0, 0, 0, p1, p2, false, animation_on);
 			printf("\e[?25l");
 			break;
 		case '3':
 			animation_on = initSettings(animation_on);
+			free(p1);
+			free(p2);
 			if(animation_on) return 1;
 			if(!animation_on) return 2;
 		case '4':
@@ -169,9 +297,13 @@ int dispMenu(bool s){
 			break;
 		case '5':
 			printf("Hope to see you soon!\n");
+			free(p1);
+			free(p2);
 			return -1;
 		default:
 			break;
 	}
+	free(p1);
+	free(p2);
 	return 0;
 }

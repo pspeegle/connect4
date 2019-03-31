@@ -14,6 +14,6 @@ bool checkBoardX(char **, int, int);
 bool checkBoardO(char **, int, int);
 bool checkTies(int**, int, int);
 int **findOpenMoves(char **, int **, int, int);
-void findBestMove(char **, int **, int, int);
+int **findBestMove(char **, int **, int, int);
 
 #endif
