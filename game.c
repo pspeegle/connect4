@@ -203,7 +203,7 @@ int **findBestMove(char **board, int **g, int cols, int rows){
 			board_copy[i][j] = board[i][j];
 		}
 	}
-	
+
 	for(int i = 0; i < rows; i++){
 		for(int j = 0; j < cols; j++){
 			if(g[i][j] == 1){
