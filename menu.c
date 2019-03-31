@@ -17,53 +17,52 @@ bool initSettings(bool animation_on){
 	return animation_on;
 }
 
-void initSinglePlayer(bool animation_on){
-	long int numRows = 0;
-	long int numCols = 0;
+void initSinglePlayer(double score1, double score2, int rows, int cols, char *play1, bool already_played, bool animation_on){
+	long int numRows = rows;
+	long int numCols = cols;
+	char* p1 = play1;
 	bool setting = animation_on;
 	bool o_turn = false;
 	char *pEnd;
 	clearFields();
-	printf("How many rows would you like in the game? NOTE: Any character input will be ignored. Any size above 50 might cause odd formatting.\n");
 	printf("\e[?25h");
-	while(1){
-		char input[100];
-		fgets(input, 100, stdin);
-		numRows = strtol(input, &pEnd, 10);
-		if(numRows < 3){
-			printf("Please choose a number that is 4 or greater.\n");
-			continue;
+	if(!already_played){
+		printf("How many rows would you like in the game? NOTE: Any character input will be ignored. Any size above 50 might cause odd formatting.\n");
+		printf("\e[?25h");
+		while(1){
+			char input[100];
+			fgets(input, 100, stdin);
+			numRows = strtol(input, &pEnd, 10);
+			if(numRows < 4){
+				printf("Please choose a number that is 4 or greater.\n");
+				continue;
+			}
+			break;
 		}
-		break;
-	}
-	printf("How many columns would you like in the game?\n");
-	while(1){
-		char input[100];
-		char *pEnd;
-		fgets(input, 100, stdin);
-		numCols = strtol(input, &pEnd, 10);
-		if(numCols < 3){
-			printf("Please choose a number that is 4 or greater.\n");
-			continue;
+		printf("How many columns would you like in the game?\n");
+		while(1){
+			char input[100];
+			char *pEnd;
+			fgets(input, 100, stdin);
+			numCols = strtol(input, &pEnd, 10);
+			if(numCols < 4){
+				printf("Please choose a number that is 4 or greater.\n");
+				continue;
+			}
+			break;
 		}
-		break;
+		printf("Enter name of Player 1 (max 50 chars): ");
+		scanf("%s", p1);
 	}
 	char **board = allocBoard(numCols,numRows);
-	int **graph = allocGraph(numCols, numRows);
-	//clearFields();	
-	graph = findOpenMoves(board, graph, numCols, numRows);
+	clearFields();	
 	printBoard(board, numCols, numRows);
 	long int curCol = 0;
 	char input[1000];
 	bool bad_input = false;
-	bool found_move = false;
-	bool found_rand = false;
 	move bestMove = {-1, -1};
 	getchar();
 	while(1){
-		//if(!bad_input) printf("NOTE: Disable animations in SETTINGS. SCORES: %s : %.1f ; %s : %.1f\n\n\n", p1, score1, p2, score2);
-		found_move = false;
-		found_rand = false;
 		if(!o_turn){
 			printf("Choose a column to place your piece (X) : ");
 			fgets(input, 1000, stdin);
@@ -73,18 +72,17 @@ void initSinglePlayer(bool animation_on){
 				bad_input = true;
 				continue;
 			}
-			//clearFields();
+			clearFields();
 			printBoard(board, numCols, numRows);
-			graph = findOpenMoves(board, graph, numCols, numRows);
 			if(checkBoard(board,numCols,numRows)){
 				printf("Player one wins!\n");
-				//score1++;
+				score1++;
 				break;
 			}
 			if(checkTies(board, numCols, numRows)){
 				printf("It's a tie!\n");
-				//score1 += 0.5;
-				//score2 += 0.5;
+				score1 += 0.5;
+				score2 += 0.5;
 				break;
 			}
 			o_turn = true;
@@ -92,37 +90,39 @@ void initSinglePlayer(bool animation_on){
 			continue;
 		}
 		if(o_turn){
-			graph = findOpenMoves(board, graph, numCols, numRows);
-			for(int i = 0; i < numRows; i++){
-				for(int j = 0; j < numCols; j++){
-					printf("%d", graph[i][j]);
-				}
-				printf("\n");
-			}
 			bestMove = findBestMove(board, numCols, numRows);
 			if(bestMove.column == -1){
-				printf("ERROR this should not happen");
+				//this should never happen, means the computer could not find a single move
+				insert(board, numCols, numRows, 1, 'O', setting);
 			}
 			else{
 				insert(board, numCols, numRows, bestMove.column, 'O', setting);
 			}
 			printf("Got here.");
 			printBoard(board, numCols, numRows);
-			graph = findOpenMoves(board, graph, numCols, numRows);
 			if(checkBoard(board,numCols,numRows)){
 				printf("Player two wins!\n");
-				//score2++;
+				score2++;
 				break;
 			}
 			if(checkTies(board, numCols, numRows)){
 				printf("It's a tie!\n");
-				//score1 += 0.5;
-				//score2 += 0.5;
+				score1 += 0.5;
+				score2 += 0.5;
 				break;
 			}
 			o_turn = false;
 		}
 	}	
+	freeBoard(board, numRows+3);
+	already_played = true;
+	printf("Press any key to exit, or 1 to play again.");
+	char buffer;
+	scanf("%c", &buffer);
+	o_turn = false;
+	if(buffer == '1'){
+		initSinglePlayer(score1, score2, numRows, numCols, p1, true, setting);
+	}
 }
 void initMultiPlayer(double score1, double score2, int rows, int cols, char *play1, char *play2, bool already_played, bool animation_on){
 	long int numRows = rows;
@@ -167,9 +167,7 @@ void initMultiPlayer(double score1, double score2, int rows, int cols, char *pla
 	}
 	printf("\e[?25l");
 	char **board = allocBoard(numCols,numRows);
-	int **graph = allocGraph(numCols, numRows);
 	clearFields();	
-	graph = findOpenMoves(board, graph, numCols, numRows);
 	printBoard(board, numCols, numRows);
 	long int curCol = 0;
 	char input[1000];
@@ -188,7 +186,6 @@ void initMultiPlayer(double score1, double score2, int rows, int cols, char *pla
 			}
 			clearFields();
 			printBoard(board, numCols, numRows);
-			graph = findOpenMoves(board, graph, numCols, numRows);
 			if(checkBoard(board,numCols,numRows)){
 				printf("Player one wins!\n");
 				score1++;
@@ -217,7 +214,6 @@ void initMultiPlayer(double score1, double score2, int rows, int cols, char *pla
 		bad_input = false;
 		clearFields();
 		printBoard(board, numCols, numRows);
-		graph = findOpenMoves(board, graph, numCols, numRows);
 		if(checkBoard(board,numCols,numRows)){
 			printf("Player two wins!\n");
 			score2++;
@@ -231,7 +227,6 @@ void initMultiPlayer(double score1, double score2, int rows, int cols, char *pla
 		}
 	}
 	freeBoard(board, numRows+3);
-	freeGraph(graph, numRows);
 	already_played = true;
 	printf("Press any key to exit, or 1 to play again.");
 	char buffer;
@@ -264,7 +259,8 @@ int dispMenu(bool s){
 	bool pressed_quit = false;
 	switch(option){
 		case '1':
-			initSinglePlayer(animation_on);
+			initSinglePlayer(0, 0, 0, 0, p1, false, animation_on);
+			break;
 		case '2':
 			initMultiPlayer(0, 0, 0, 0, p1, p2, false, animation_on);
 			printf("\e[?25l");
