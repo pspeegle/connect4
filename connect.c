@@ -6,7 +6,7 @@
 
 int main(void){
 	printf("\e[?25l");
-	bool animation_on = false;
+	bool animation_on = true;
 	int rValue = 0;
 	while(1){
 		rValue = dispMenu(animation_on);

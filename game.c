@@ -81,6 +81,7 @@ int insert(char **board, int cols, int rows, int curCol, char c, bool animations
 		}
 		else{
 			int j = 0;
+			printf("\e[?25l");
 			if(animations_on){
 				while(j <= i){
 					if(j > 0) board[j-1][curCol] = ' ';
@@ -90,6 +91,7 @@ int insert(char **board, int cols, int rows, int curCol, char c, bool animations
 					clearFields();
 					j++;
 				}
+				printf("\e[?25h");
 			}
 			else{
 				board[i][curCol] = c;
@@ -160,13 +162,17 @@ int scorePosition(char **board, int cols, int rows){
 	return 0;
 }
 //minimax - a recursive algorithm assigning a score to a move
-int miniMax(char **board, int depth, int cols, int rows, bool isMove){
-	//limit controls how much depth the algorithm goes into
+int miniMax(char **board, int depth, int difficulty, int cols, int rows, bool isMove){
+	//limit controls how much depth the algorithm goes into - higher difficulties imply higher limits
 	int limit;
-	if(cols + rows == 8) limit = 8;
-	else if(cols + rows < 11) limit = 6;
-	else{
-		limit = 4;
+	if(difficulty == 1) limit = 2;
+	if(difficulty == 2) limit = 4;
+	if(difficulty == 3){
+		if(cols + rows == 8) limit = 8;
+		else if(cols + rows < 11) limit = 6;
+		else{
+			limit = 4;
+		}
 	}
 	int score = scorePosition(board, cols, rows);
 	//the more in depth a win is, the worse it is scored
@@ -187,7 +193,7 @@ int miniMax(char **board, int depth, int cols, int rows, bool isMove){
 				if(board[i][j] == ' ' && (board[i+1][j] == 'X' || board[i+1][j] == 'O' || board[i+1][j] == '+') && depth < limit){
 					board[i][j] = 'O';
 					//max is defined in the heading, same with min
-					best = max(best, miniMax(board, depth+1, cols, rows, !isMove));
+					best = max(best, miniMax(board, depth+1, difficulty, cols, rows, !isMove));
 					board[i][j] = ' ';	
 				}
 			}
@@ -201,7 +207,7 @@ int miniMax(char **board, int depth, int cols, int rows, bool isMove){
 			for(int j = cols-1; j >=0; j--){
 				if(board[i][j] == ' ' && (board[i+1][j] == 'X' || board[i+1][j] == 'O' || board[i+1][j] == '+') && depth < limit){
 					board[i][j] = 'X';
-					best = min(best, miniMax(board, depth+1, cols, rows, !isMove));
+					best = min(best, miniMax(board, depth+1, difficulty, cols, rows, !isMove));
 					board[i][j] = ' ';
 				}
 			}
@@ -210,37 +216,39 @@ int miniMax(char **board, int depth, int cols, int rows, bool isMove){
 	}
 }
 //uses minimax to find the best move
-move findBestMove(char **board, int cols, int rows){
+move findBestMove(char **board, int cols, int rows, int difficulty){
 	int bestVal = -1000000;
 	move bestMove;
 	bestMove.row = -1;
 	bestMove.column = -1;
-	//optimization: if there is a win in one move, computer looks for it first
-	for(int i = 0; i < rows; i++){
-		for(int j = 0; j < cols; j++){
-			if(board[i][j] == ' ' && (board[i+1][j] == 'X' || board[i+1][j] == 'O' || board[i+1][j] == '+')){
-				board[i][j] = 'O';
-				if(checkBoardO(board, cols, rows)){
-					bestMove.row = i;
-					bestMove.column = j;
+	//optimization: if there is a win in one move, computer looks for it first, except if the difficulty is on trivially easy
+	if(difficulty > 1){
+		for(int i = 0; i < rows; i++){
+			for(int j = 0; j < cols; j++){
+				if(board[i][j] == ' ' && (board[i+1][j] == 'X' || board[i+1][j] == 'O' || board[i+1][j] == '+')){
+					board[i][j] = 'O';
+					if(checkBoardO(board, cols, rows)){
+						bestMove.row = i;
+						bestMove.column = j;
+						board[i][j] = ' ';
+						return bestMove;
+					}
 					board[i][j] = ' ';
-					return bestMove;
 				}
-				board[i][j] = ' ';
 			}
 		}
-	}
-	for(int i = 0; i < rows; i++){
-		for(int j = 0; j < cols; j++){
-			if(board[i][j] == ' ' && (board[i+1][j] == 'X' || board[i+1][j] == 'O' || board[i+1][j] == '+')){
-				board[i][j] = 'X';
-				if(checkBoardX(board, cols, rows)){
-					bestMove.row = i;
-					bestMove.column = j;
+		for(int i = 0; i < rows; i++){
+			for(int j = 0; j < cols; j++){
+				if(board[i][j] == ' ' && (board[i+1][j] == 'X' || board[i+1][j] == 'O' || board[i+1][j] == '+')){
+					board[i][j] = 'X';
+					if(checkBoardX(board, cols, rows)){
+						bestMove.row = i;
+						bestMove.column = j;
+						board[i][j] = ' ';
+						return bestMove;
+					}
 					board[i][j] = ' ';
-					return bestMove;
 				}
-				board[i][j] = ' ';
 			}
 		}
 	}
@@ -249,7 +257,7 @@ move findBestMove(char **board, int cols, int rows){
 		for(int j = 0; j < cols; j++){
 			if(board[i][j] == ' ' && (board[i+1][j] == 'X' || board[i+1][j] == 'O' || board[i+1][j] == '+')){
 				board[i][j] = 'O';
-				int moveVal = miniMax(board, 0, cols, rows, false);
+				int moveVal = miniMax(board, 0, difficulty, cols, rows, false);
 				board[i][j] = ' ';
 				if(moveVal > bestVal){
 					bestMove.row = i;
