@@ -6,10 +6,5 @@ typedef struct Move{
 	int column;
 } move;
 
-typedef struct Settings{
-	bool animation_on;
-	bool depth_on;
-} settings;
-
 #endif
 

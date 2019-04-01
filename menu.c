@@ -27,6 +27,9 @@ void initSinglePlayer(double score1, double score2, int rows, int cols, int d, c
 	char *pEnd;
 	clearFields();
 	printf("\e[?25h");
+	if(already_played){
+		getchar();
+	}
 	if(!already_played){
 		printf("How many rows would you like in the game? NOTE: Any character input will be ignored. Any size above 50 might cause odd formatting. Any size above 10 makes for weird animations.\n");
 		printf("\e[?25h");
@@ -191,7 +194,7 @@ void initMultiPlayer(double score1, double score2, int rows, int cols, char *pla
 	while(1){
 		if(!bad_input) printf("NOTE: Disable animations in SETTINGS. SCORES: %s : %.1f ; %s : %.1f\n\n\n", p1, score1, p2, score2);
 		if(o_turn == false){
-			printf("%s, choose a column to place your piece (X) - press q to quit : ", p1);
+			printf("%s, choose a column to place your piece (X) : ", p1);
 			fgets(input, 1000, stdin);
 			curCol = strtol(input, &pEnd, 10);
 			curCol--;
@@ -363,6 +366,7 @@ int dispMenu(bool s){
 			getchar();
 			printf("Press any button + enter to continue: ");
 			scanf("%c", &buf);
+			freeBoard(b_tutorial, 8);
 			break;
 		case 5:
 			printf("Hope to see you soon!\n");
