@@ -5,6 +5,7 @@
 #include "game.h"
 #include "menu.h"
 
+//Code to run the settings. Returns if the animations was changed.
 bool initSettings(bool animation_on){
 	char input;
 	clearFields();
@@ -17,15 +18,18 @@ bool initSettings(bool animation_on){
 	return animation_on;
 }
 
+//Code to run single player.
 void initSinglePlayer(double score1, double score2, int rows, int cols, int d, char *play1, bool already_played, bool animation_on){
 	long int numRows = rows;
 	long int numCols = cols;
-	int difficulty = d;
+	long int difficulty = d;
 	char* p1 = play1;
 	bool setting = animation_on;
 	bool o_turn = false;
+	//pEnd is necessary for strtol, it has no other use
 	char *pEnd;
 	clearFields();
+	//This piece of code shows the cursor
 	printf("\e[?25h");
 	if(already_played){
 		getchar();
@@ -36,6 +40,7 @@ void initSinglePlayer(double score1, double score2, int rows, int cols, int d, c
 		while(1){
 			char input[100];
 			fgets(input, 100, stdin);
+			//sanitizes input
 			numRows = strtol(input, &pEnd, 10);
 			if(numRows < 4){
 				printf("Please choose a number that is 4 or greater.\n");
@@ -74,12 +79,13 @@ void initSinglePlayer(double score1, double score2, int rows, int cols, int d, c
 	char **board = allocBoard(numCols,numRows);
 	clearFields();	
 	printBoard(board, numCols, numRows);
+	//stands for Current Column, this chooses which column to insert at
 	long int curCol = 0;
 	char input[1000];
 	bool bad_input = false;
 	move bestMove = {-1, -1};
-	//getchar();
 	while(1){
+		//if X doesn't make a valid move, don't print the scores again
 		if(!bad_input) printf("NOTE: Disable animations in SETTINGS. SCORES: %s : %.1f ; Computer : %.1f\n\n\n", p1, score1, score2);
 		if(!o_turn){
 			printf("Choose a column to place your piece (X) : ");
@@ -108,9 +114,11 @@ void initSinglePlayer(double score1, double score2, int rows, int cols, int d, c
 			continue;
 		}
 		if(o_turn){
+			//find the best move for the computer to play given a certain difficulty
 			bestMove = findBestMove(board, numCols, numRows, difficulty);
 			if(bestMove.column == -1){
 				//this should never happen, means the computer could not find a single move
+				//it is a failsafe for the 0.00001% chance this somehow occurs
 				insert(board, numCols, numRows, 1, 'O', setting);
 			}
 			else{
@@ -138,10 +146,13 @@ void initSinglePlayer(double score1, double score2, int rows, int cols, int d, c
 	char buffer;
 	scanf("%c", &buffer);
 	o_turn = false;
+	//if you want to play again, the function is called again
 	if(buffer == '1'){
 		initSinglePlayer(score1, score2, numRows, numCols, difficulty, p1, true, setting);
 	}
 }
+
+//essentially the same as initSinglePlayer but with a few key differences
 void initMultiPlayer(double score1, double score2, int rows, int cols, char *play1, char *play2, bool already_played, bool animation_on){
 	long int numRows = rows;
 	long int numCols = cols;
@@ -256,6 +267,7 @@ void initMultiPlayer(double score1, double score2, int rows, int cols, char *pla
 }
 
 int dispMenu(bool s){
+	//default setting is that the animations are on
 	bool animation_on = s;
 	clearFields();
 	printf("************WELCOME TO CONNECT FOUR IN A ROW************\n\n");
@@ -269,6 +281,7 @@ int dispMenu(bool s){
 	else{
 		printf("\nANIMATIONS ARE OFF. Select an option above: \n");
 	}
+	//show cursor
 	printf("\e[?25h");
 	char *p1 = (char*)malloc(50*sizeof(char*));
 	char *p2 = (char*)malloc(50*sizeof(char*));
@@ -288,9 +301,11 @@ int dispMenu(bool s){
 			animation_on = initSettings(animation_on);
 			free(p1);
 			free(p2);
+			//whatever value is returned is read in connect.c and allows it to choose if animation_on is true
 			if(animation_on) return 1;
 			if(!animation_on) return 2;
 		case 4:
+			//tutorial
 			clearFields();
 			printf("Welcome to connect 4! Two players take turns placing pieces on an arbitrary-sized board until they have connected four of their pieces in a row.\n");
 			printf("Let's see some examples.\n\n");
@@ -369,6 +384,7 @@ int dispMenu(bool s){
 			freeBoard(b_tutorial, 8);
 			break;
 		case 5:
+			//quit
 			printf("Hope to see you soon!\n");
 			free(p1);
 			free(p2);
